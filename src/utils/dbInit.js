@@ -1,4 +1,6 @@
+// src/utils/initializeDatabase.js
 const sequelize = require('../config/database');
+const { Invoice, InvoiceItem, Counter } = require('../models');
 
 const isDevelopment = process.env.NODE_ENV === 'development';
 
