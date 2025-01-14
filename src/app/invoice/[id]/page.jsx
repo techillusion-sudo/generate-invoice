@@ -1,8 +1,11 @@
 "use client"
 import React from 'react';
+import { useSearchParams } from 'next/navigation';
 
 const Invoice = () => {
-    
+    const searchParams = useSearchParams();
+    const id = searchParams.get('id');
+
     const tableData = [
         {
             description: "We are offering you rooms for 200 pax including Water, Electricity and Gas. One time payment",

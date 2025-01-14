@@ -83,7 +83,6 @@ export default function Home() {
 
       <InvoiceTable 
         invoices={invoices} 
-        onView={(invoice) => console.log('View invoice:', invoice)} 
       />
       
       <InvoiceModal

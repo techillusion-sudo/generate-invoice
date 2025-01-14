@@ -1,4 +1,3 @@
-// src/models/counter.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
@@ -24,7 +23,7 @@ const Counter = sequelize.define('Counter', {
 // Function to generate next invoice number
 Counter.generateNextInvoiceNumber = async function() {
   const currentYear = new Date().getFullYear();
-  const yearSuffix = currentYear.toString().slice(-2); // Get last 2 digits of year
+  const yearSuffix = currentYear.toString().slice(-2);
   const counterId = `INVOICE_${currentYear}`;
 
   try {
