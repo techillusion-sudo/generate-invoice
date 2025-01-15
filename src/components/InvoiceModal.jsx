@@ -7,9 +7,11 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, defaultInvoiceNumber }) => {
     invoiceNumber: '',
     date: new Date().toISOString().split('T')[0],
     clientName: '',
+    clientContact: '', // Added field
     street: '',
     city: '',
     country: '',
+    discount: 0,  // Added field with default value
     items: [{ description: '', quantity: 0, rate: 0, amount: 0 }]
   });
 
@@ -30,9 +32,11 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, defaultInvoiceNumber }) => {
         invoiceNumber: defaultInvoiceNumber,
         date: new Date().toISOString().split('T')[0],
         clientName: '',
+        clientContact: '', // Added field
         street: '',
         city: '',
         country: '',
+        discount: 0,  // Added field with default value
         items: [{ description: '', quantity: 0, rate: 0, amount: 0 }]
       });
     }
@@ -142,6 +146,19 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, defaultInvoiceNumber }) => {
                 />
               </div>
 
+              {/* Added Contact Info Field */}
+              <div>
+                <label className="block text-sm mb-1">Contact Info</label>
+                <input
+                  type="text"
+                  name="clientContact"
+                  value={formData.clientContact}
+                  onChange={handleChange}
+                  placeholder="Enter client contact info"
+                  className="w-full px-3 py-1.5 border rounded focus:ring-1 focus:ring-blue-500"
+                />
+              </div>
+
               <div>
                 <label className="block text-sm mb-1">Street Address</label>
                 <input
@@ -177,6 +194,22 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, defaultInvoiceNumber }) => {
                     className="w-full px-3 py-1.5 border rounded focus:ring-1 focus:ring-blue-500"
                   />
                 </div>
+              </div>
+
+              {/* Added Discount Field */}
+              <div>
+                <label className="block text-sm mb-1">Discount (%)</label>
+                <input
+                  type="number"
+                  name="discount"
+                  value={formData.discount}
+                  onChange={handleChange}
+                  min="0"
+                  max="100"
+                  step="0.1"
+                  placeholder="Enter discount percentage"
+                  className="w-full px-3 py-1.5 border rounded focus:ring-1 focus:ring-blue-500"
+                />
               </div>
             </div>
           </div>
@@ -267,7 +300,7 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, defaultInvoiceNumber }) => {
           </div>
         </div>
 
-        {/* Footer Actions */}
+ 
 
         {/* Footer Actions */}
         <div className="flex justify-end space-x-2 pt-4 mt-4 border-t">

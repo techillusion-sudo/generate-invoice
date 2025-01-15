@@ -21,6 +21,10 @@ const Invoice = sequelize.define('Invoice', {
     type: DataTypes.STRING,
     allowNull: false
   },
+  clientContact: {  // Added field
+    type: DataTypes.STRING,
+    allowNull: true
+  },
   street: {
     type: DataTypes.STRING,
     allowNull: false
@@ -32,6 +36,11 @@ const Invoice = sequelize.define('Invoice', {
   country: {
     type: DataTypes.STRING,
     allowNull: false
+  },
+  discount: {  // Added field
+    type: DataTypes.FLOAT,
+    allowNull: false,
+    defaultValue: 0
   }
 }, {
   timestamps: true

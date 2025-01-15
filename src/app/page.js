@@ -19,6 +19,8 @@ export default function Home() {
     try {
       const response = await fetch('/api/invoices');
       const data = await response.json();
+
+
       setInvoices(data);
     } catch (error) {
       console.error('Error fetching invoices:', error);
