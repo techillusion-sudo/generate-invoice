@@ -1,9 +1,16 @@
+
 "use client";
 import React, { useEffect, useState } from "react";
+import dynamic from 'next/dynamic';
 
+// Dynamic import for html2pdf (client-side only)
+const html2pdf = dynamic(() => import('html2pdf.js'), {
+  ssr: false
+});
 const Invoice = ({ params }) => {
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
 
   // Fetch invoice data
   useEffect(() => {
@@ -77,38 +84,41 @@ const Invoice = ({ params }) => {
   const total = subtotal - discountAmount;
 
   // Print styles
-  React.useEffect(() => {
-    const style = document.createElement("style");
-    style.textContent = `
-      @page {
-          size: A4;
-          margin: 0;
+React.useEffect(() => {
+  const style = document.createElement("style");
+  style.textContent = `
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        forced-color-adjust: exact !important;
+        color-scheme: light !important;
       }
-      @media print {
-          body {
-              margin: 0;
-              padding: 0;
-              -webkit-print-color-adjust: exact !important;
-              print-color-adjust: exact !important;
-              forced-color-adjust: exact !important;
-              color-scheme: light !important;
-          }
-          .print-wrapper {
-              padding: 0 !important;
-              background: none !important;
-          }
-          #invoice {
-              margin: 0 !important;
-              padding: 0 !important;
-          }
+      .print-wrapper {
+        padding: 0 !important;
+        background: none !important;
       }
-    `;
-    document.head.appendChild(style);
+      #invoice {
+        margin: 0 !important;
+        padding: 0 !important;
+      }
+      .print:hidden {
+        display: none !important;
+      }
+    }
+  `;
+  document.head.appendChild(style);
 
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
+  return () => {
+    document.head.removeChild(style);
+  };
+}, []);
 
   if (loading) {
     return (
@@ -117,9 +127,68 @@ const Invoice = ({ params }) => {
       </div>
     );
   }
+  const handleDownloadPDF = async () => {
+    try {
+      setIsGeneratingPdf(true);
+      
+      // Dynamically import html2pdf only when needed
+      const html2pdf = (await import('html2pdf.js')).default;
+      
+      const element = document.getElementById('invoice');
+      const options = {
+        margin: 0,
+        filename: `invoice-${invoiceData.number}.pdf`,
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+          scale: 2,
+          useCORS: true,
+          letterRendering: true
+        },
+        jsPDF: { 
+          unit: 'mm', 
+          format: 'a4', 
+          orientation: 'portrait'
+        }
+      };
+
+      const worker = html2pdf().set(options);
+      await worker.from(element).save();
+      
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Error generating PDF. Please try again.');
+    } finally {
+      setIsGeneratingPdf(false);
+    }
+  };
+
+  const handlePrint = () => {
+    window.print();
+  };
+
 
   // Rest of your JSX remains exactly the same...
   return (
+    <div className="relative">
+    {/* Action Buttons */}
+    <div className="fixed top-4 right-4 space-x-2 print:hidden z-50">
+      <button
+        onClick={handleDownloadPDF}
+        disabled={isGeneratingPdf}
+        className={`px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors ${
+          isGeneratingPdf ? 'opacity-50 cursor-not-allowed' : ''
+        }`}
+      >
+        {isGeneratingPdf ? 'Generating PDF...' : 'Download PDF'}
+      </button>
+      <button
+        onClick={handlePrint}
+        className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 transition-colors"
+      >
+        Print
+      </button>
+    </div>
+
     <div className="print-wrapper flex justify-center items-center bg-gray-200 p-10">
       <div
         id="invoice"
@@ -307,6 +376,7 @@ const Invoice = ({ params }) => {
           />
         </div>
       </div>
+    </div>
     </div>
   );
 };
