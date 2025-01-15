@@ -159,7 +159,7 @@ React.useEffect(() => {
       const element = document.getElementById('invoice');
       const options = {
         margin: 0,
-        filename: `invoice-${invoiceData.number}.pdf`,
+        filename: `${invoiceData.number}.pdf`,
         image: { type: 'jpeg', quality: 0.98 },
         html2canvas: { 
           scale: 2,
