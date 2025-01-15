@@ -7,7 +7,8 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, defaultInvoiceNumber }) => {
     invoiceNumber: '',
     date: new Date().toISOString().split('T')[0],
     clientName: '',
-    clientContact: '', // Added field
+    clientPhone: '', 
+    clientEmail: '', 
     street: '',
     city: '',
     country: '',
@@ -32,7 +33,8 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, defaultInvoiceNumber }) => {
         invoiceNumber: defaultInvoiceNumber,
         date: new Date().toISOString().split('T')[0],
         clientName: '',
-        clientContact: '', // Added field
+        clientPhone: '', // Updated field
+        clientEmail: '', // Updated field
         street: '',
         city: '',
         country: '',
@@ -147,17 +149,30 @@ const InvoiceModal = ({ isOpen, onClose, onSubmit, defaultInvoiceNumber }) => {
               </div>
 
               {/* Added Contact Info Field */}
-              <div>
-                <label className="block text-sm mb-1">Contact Info</label>
-                <input
-                  type="text"
-                  name="clientContact"
-                  value={formData.clientContact}
-                  onChange={handleChange}
-                  placeholder="Enter client contact info"
-                  className="w-full px-3 py-1.5 border rounded focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
+              <div className="grid grid-cols-2 gap-4">
+  <div>
+    <label className="block text-sm mb-1">Phone</label>
+    <input
+      type="text"
+      name="clientPhone"
+      value={formData.clientPhone}
+      onChange={handleChange}
+      placeholder="Enter client phone"
+      className="w-full px-3 py-1.5 border rounded focus:ring-1 focus:ring-blue-500"
+    />
+  </div>
+  <div>
+    <label className="block text-sm mb-1">Email</label>
+    <input
+      type="email"
+      name="clientEmail"
+      value={formData.clientEmail}
+      onChange={handleChange}
+      placeholder="Enter client email"
+      className="w-full px-3 py-1.5 border rounded focus:ring-1 focus:ring-blue-500"
+    />
+  </div>
+</div>
 
               <div>
                 <label className="block text-sm mb-1">Street Address</label>

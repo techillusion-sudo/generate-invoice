@@ -63,6 +63,7 @@ export async function GET(request) {
     );
   }
 }
+// src/app/api/invoices/route.js
 export async function POST(request) {
   try {
     const data = await request.json();
@@ -88,16 +89,17 @@ export async function POST(request) {
 
       const invoiceNumber = `NV-1000-${yearSuffix}-${newSequence.toString().padStart(4, '0')}`;
 
-      // Create the invoice with new fields
+      // Create the invoice with updated fields
       const invoice = await Invoice.create({
         invoiceNumber,
         date: new Date(data.date),
         clientName: data.clientName,
-        clientContact: data.clientContact, // New field
+        clientPhone: data.clientPhone,    // Updated field
+        clientEmail: data.clientEmail,    // Updated field
         street: data.street,
         city: data.city,
         country: data.country,
-        discount: parseFloat(data.discount) || 0 // New field with default
+        discount: parseFloat(data.discount) || 0
       }, { transaction: t });
 
       // Create invoice items
