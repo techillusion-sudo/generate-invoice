@@ -44,8 +44,8 @@ Counter.generateNextInvoiceNumber = async function() {
       const newSequence = counter.sequence + 1;
       await counter.update({ sequence: newSequence }, { transaction: t });
 
-      // Format: NV-1000-YY-XXXX
-      return `NV-1000-${yearSuffix}-${newSequence.toString().padStart(4, '0')}`;
+      // Format: INV-1000-YY-XXXX
+      return `INV-1000-${yearSuffix}-${newSequence.toString().padStart(4, '0')}`;
     });
 
     return result;

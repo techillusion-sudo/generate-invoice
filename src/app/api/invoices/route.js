@@ -40,7 +40,7 @@ export async function GET(request) {
       });
 
       const sequence = counter ? counter.sequence : 0;
-      const currentInvoiceNumber = `NV-1000-${yearSuffix}-${(sequence + 1).toString().padStart(4, '0')}`;
+      const currentInvoiceNumber = `INV-1000-${yearSuffix}-${(sequence + 1).toString().padStart(4, '0')}`;
 
       return NextResponse.json({ currentInvoiceNumber });
     }
@@ -86,7 +86,7 @@ export async function POST(request) {
       const newSequence = counter.sequence + 1;
       await counter.update({ sequence: newSequence }, { transaction: t });
 
-      const invoiceNumber = `NV-1000-${yearSuffix}-${newSequence.toString().padStart(4, '0')}`;
+      const invoiceNumber = `INV-1000-${yearSuffix}-${newSequence.toString().padStart(4, '0')}`;
 
       // Create the invoice with new fields
       const invoice = await Invoice.create({
