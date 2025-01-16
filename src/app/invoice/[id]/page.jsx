@@ -84,6 +84,7 @@ const Invoice = ({ params }) => {
   const total = subtotal - discountAmount;
 
   // Print styles
+// Add this effect in your component
 React.useEffect(() => {
   const style = document.createElement("style");
   style.textContent = `
@@ -107,9 +108,30 @@ React.useEffect(() => {
       #invoice {
         margin: 0 !important;
         padding: 0 !important;
+        width: 210mm !important;
+        min-height: 297mm !important;
       }
-      .print:hidden {
+      .print\:hidden {
         display: none !important;
+      }
+    }
+
+    /* Additional styles for better PDF generation */
+    #invoice {
+      background-color: white !important;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    #invoice img {
+      max-width: 100%;
+      height: auto;
+    }
+    
+    @media screen {
+      .print-wrapper {
+        min-height: 297mm;
+        background-color: rgb(229, 231, 235);
+        padding: 2.5rem;
       }
     }
   `;
@@ -167,7 +189,6 @@ React.useEffect(() => {
   };
 
 
-  // Rest of your JSX remains exactly the same...
   return (
     <div className="relative">
     {/* Action Buttons */}
@@ -194,8 +215,7 @@ React.useEffect(() => {
         id="invoice"
         className="min-h-screen bg-white text-black light print:min-h-[297mm] print:w-[210mm] w-[210mm] print:m-0 print:p-0 relative flex flex-col"
       >
-        {/* Your existing JSX remains unchanged */}
-        {/* Just updating the dynamic data parts */}
+    
 
         {/* Header */}
         <div className="w-full bg-white -mt-1 relative">
@@ -244,25 +264,30 @@ React.useEffect(() => {
 
             {/* Bill To section - dynamic */}
             <div className="p-4 bg-[#e6e6e5] rounded-lg">
-              <h3 className="font-semibold mb-2 text-gray-700 text-lg">
-                Bill To:
-              </h3>
-              <p className="text-gray-600 text-sm">
-                <span className="font-semibold">Client Name: </span>{" "}
-                {invoice?.clientName || "Client Name"}
-              </p>
-              <p className="text-gray-600 text-sm">
-                <span className="font-semibold">Client Address: </span>
-                {invoice?.city
-                  ? `${invoice.street}, ${invoice.city}, ${invoice.country}`
-                  : "Client Address"}
-              </p>
-              <p className="text-gray-600 text-sm">
-                {" "}
-                <span className="font-semibold">Client Contact Info: </span>
-                {invoice?.clientContact || "Client Contact Info"}
-              </p>
-            </div>
+  <h3 className="font-semibold mb-2 text-gray-700 text-lg">
+    To:
+  </h3>
+  <p className="text-gray-600 text-sm">
+    <span className="font-semibold"></span>
+    {invoice?.clientName || ""}
+  </p>
+  <p className="text-gray-600 text-sm">
+    <span className="font-semibold"></span>
+    {invoice?.street
+      ? `${invoice.street}, ${invoice.city}, ${invoice.country}`
+      : ""}
+  </p>
+  <p className="text-gray-600 text-sm">
+    {" "}
+    <span className="font-semibold">Phone: </span>
+    {invoice?.clientPhone || ""}
+  </p>
+  <p className="text-gray-600 text-sm">
+    {" "}
+    <span className="font-semibold">Email: </span>
+    {invoice?.clientEmail || ""}
+  </p>
+</div>
           </div>
 
           {/* Items Table */}

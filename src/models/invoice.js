@@ -21,7 +21,11 @@ const Invoice = sequelize.define('Invoice', {
     type: DataTypes.STRING,
     allowNull: false
   },
-  clientContact: {  // Added field
+  clientPhone: {  // New field replacing clientContact
+    type: DataTypes.STRING,
+    allowNull: true
+  },
+  clientEmail: {  // New field replacing clientContact
     type: DataTypes.STRING,
     allowNull: true
   },
@@ -37,7 +41,7 @@ const Invoice = sequelize.define('Invoice', {
     type: DataTypes.STRING,
     allowNull: false
   },
-  discount: {  // Added field
+  discount: {
     type: DataTypes.FLOAT,
     allowNull: false,
     defaultValue: 0
