@@ -1,336 +1,482 @@
 // src/components/InvoiceModal.jsx
+"use client";
+
 import { useState, useEffect } from "react";
 import Modal from "./Modal";
 
-const InvoiceModal = ({ isOpen, onClose, onSubmit, defaultInvoiceNumber }) => {
+const InvoiceModal = ({
+  isOpen,
+  onClose,
+  onSubmit,
+  defaultInvoiceNumber,
+  isLoading,
+  currencies,
+}) => {
+  const ReferralOptions = ["Ali Raza", "Muneeb Ahmad", "Other"];
   const [formData, setFormData] = useState({
-    invoiceNumber: '',
-    date: new Date().toISOString().split('T')[0],
-    clientName: '',
-    clientPhone: '', 
-    clientEmail: '', 
-    street: '',
-    city: '',
-    country: '',
-    discount: 0,  // Added field with default value
-    items: [{ description: '', quantity: 0, rate: 0, amount: 0 }]
+    invoiceNumber: "",
+    date: new Date().toISOString().split("T")[0],
+    clientName: "",
+    clientEmail: "",
+    clientPhone: "",
+    street: "",
+    city: "",
+    country: "",
+    currencyCode: "USD",
+    referredBy: "",
+    customReferral: "",
+    discount: 0,
+
+    items: [],
   });
 
-  // Update form when defaultInvoiceNumber changes
+  const [newItem, setNewItem] = useState({
+    description: "",
+    quantity: "",
+    rate: "",
+  });
+
   useEffect(() => {
     if (defaultInvoiceNumber) {
-      setFormData(prev => ({
-        ...prev,
-        invoiceNumber: defaultInvoiceNumber
-      }));
+      setFormData((prev) => ({ ...prev, invoiceNumber: defaultInvoiceNumber }));
     }
   }, [defaultInvoiceNumber]);
 
-  // Reset form when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-      setFormData({
-        invoiceNumber: defaultInvoiceNumber,
-        date: new Date().toISOString().split('T')[0],
-        clientName: '',
-        clientPhone: '', // Updated field
-        clientEmail: '', // Updated field
-        street: '',
-        city: '',
-        country: '',
-        discount: 0,  // Added field with default value
-        items: [{ description: '', quantity: 0, rate: 0, amount: 0 }]
-      });
-    }
-  }, [isOpen, defaultInvoiceNumber]);
-
-  const handleChange = (e) => {
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
-      ...prev,
-      [name]: value
-    }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleItemChange = (index, field, value) => {
-    const newItems = [...formData.items];
-    newItems[index][field] = value;
-    
-    if (field === 'quantity' || field === 'rate') {
-      newItems[index].amount = parseFloat(newItems[index].quantity || 0) * parseFloat(newItems[index].rate || 0);
-    }
-    
-    setFormData(prev => ({
-      ...prev,
-      items: newItems
-    }));
+  const handleNewItemChange = (e) => {
+    const { name, value } = e.target;
+    setNewItem((prev) => ({ ...prev, [name]: value }));
   };
 
   const addItem = () => {
-    setFormData(prev => ({
-      ...prev,
-      items: [...prev.items, { description: '', quantity: 0, rate: 0, amount: 0 }]
-    }));
-  };
-
-  const deleteItem = (index) => {
-    if (formData.items.length > 1) {
-      setFormData(prev => ({
-        ...prev,
-        items: prev.items.filter((_, i) => i !== index)
-      }));
-    }
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    // Validate form
-    if (!formData.clientName.trim()) {
-      alert('Please enter client name');
+    if (!newItem.description || !newItem.quantity || !newItem.rate) {
+      alert("Please fill all item fields");
       return;
     }
 
-    if (!formData.items.some(item => item.description && item.quantity && item.rate)) {
-      alert('Please add at least one item with description, quantity, and price');
-      return;
-    }
+    const amount = parseFloat(newItem.quantity) * parseFloat(newItem.rate);
+    const updatedItems = [...formData.items, { ...newItem, amount }];
 
-    // Submit form
-    try {
-      await onSubmit(formData);
-    } catch (error) {
-      console.error('Error submitting form:', error);
-      alert('Failed to create invoice');
-    }
+    setFormData((prev) => ({ ...prev, items: updatedItems }));
+    setNewItem({
+      description: "",
+      quantity: "",
+      rate: "",
+    });
   };
+
+  const removeItem = (index) => {
+    const updatedItems = formData.items.filter((_, i) => i !== index);
+    setFormData((prev) => ({ ...prev, items: updatedItems }));
+  };
+
+  const calculateTotals = () => {
+    const symbol = currencies[formData.currencyCode].symbol;
+    const subtotal = formData.items.reduce(
+      (sum, item) => sum + parseFloat(item.quantity) * parseFloat(item.rate),
+      0
+    );
+    const discount = (subtotal * (parseFloat(formData.discount) || 0)) / 100;
+    const total = subtotal - discount;
+
+    return {
+      subtotal: subtotal.toFixed(2),
+      discount: discount.toFixed(2),
+      total: total.toFixed(2),
+      symbol,
+    };
+  };
+
+ // Modify the handleSubmit function to include the correct referral value
+const handleSubmit = (e) => {
+  e.preventDefault();
+  if (formData.items.length === 0) {
+    alert('Please add at least one item');
+    return;
+  }
+
+  // Prepare the submission data
+  const submissionData = {
+    ...formData,
+    referredBy: formData.referredBy === 'Other' ? formData.customReferral : formData.referredBy
+  };
+
+  // Remove customReferral from the submission
+  delete submissionData.customReferral;
+  
+  onSubmit(submissionData);
+};
+
+  const resetForm = () => {
+    setFormData({
+      invoiceNumber: defaultInvoiceNumber || "",
+      date: new Date().toISOString().split("T")[0],
+      clientName: "",
+      clientEmail: "",
+      clientPhone: "",
+      street: "",
+      city: "",
+      country: "",
+      currencyCode: "USD",
+      discount: 0,
+      items: [],
+    });
+    setNewItem({
+      description: "",
+      quantity: "",
+      rate: "",
+    });
+  };
+
+  const totals = calculateTotals();
+
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Create New Invoice">
+    <Modal
+      isOpen={isOpen}
+      onClose={() => {
+        onClose();
+        resetForm();
+      }}
+    >
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Header Section */}
-        <div className="grid grid-cols-2 gap-4">
+        <h2 className="text-2xl font-bold mb-4">Create New Invoice</h2>
+
+        {/* Invoice Details Section */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm mb-1">Invoice Number</label>
+            <label className="block text-sm font-medium mb-1">
+              Invoice Number
+            </label>
             <input
               type="text"
               name="invoiceNumber"
               value={formData.invoiceNumber}
-              onChange={handleChange}
-              className="w-full px-3 py-1.5 border rounded focus:ring-1 focus:ring-blue-500"
+              readOnly
+              className="w-full p-2 border rounded bg-gray-100"
             />
           </div>
           <div>
-            <label className="block text-sm mb-1">Date</label>
+            <label className="block text-sm font-medium mb-1">Date</label>
             <input
               type="date"
               name="date"
               value={formData.date}
-              onChange={handleChange}
-              className="w-full px-3 py-1.5 border rounded focus:ring-1 focus:ring-blue-500"
+              onChange={handleInputChange}
+              className="w-full p-2 border rounded"
+              required
             />
           </div>
         </div>
 
-        {/* Client Information Section */}
-        <div className="space-y-3">
+        {/* Currency Selection */}
+        <div className="mb-4">
+          <label className="block text-sm font-medium mb-1">Currency</label>
+          <select
+            name="currencyCode"
+            value={formData.currencyCode}
+            onChange={handleInputChange}
+            className="w-full p-2 border rounded"
+            required
+          >
+            {Object.entries(currencies).map(([code, currency]) => (
+              <option key={code} value={code}>
+                {code} - {currency.name} ({currency.symbol})
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="space-y-4">
           <div>
-            <h3 className="text-sm font-medium mb-3">Client Information</h3>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm mb-1">Client Name</label>
-                <input
-                  type="text"
-                  name="clientName"
-                  value={formData.clientName}
-                  onChange={handleChange}
-                  placeholder="Enter client name"
-                  className="w-full px-3 py-1.5 border rounded focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
+            <label className="block text-sm font-medium mb-1">
+              Referred By
+            </label>
+            <select
+              name="referredBy"
+              value={formData.referredBy}
+              onChange={(e) => {
+                const value = e.target.value;
+                setFormData((prev) => ({
+                  ...prev,
+                  referredBy: value,
+                  customReferral: value === "Other" ? prev.customReferral : "",
+                }));
+              }}
+              className="w-full p-2 border rounded"
+            >
+              <option value="">Select Referral</option>
+              {ReferralOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option}
+                </option>
+              ))}
+            </select>
+          </div>
 
-              {/* Added Contact Info Field */}
-              <div className="grid grid-cols-2 gap-4">
-  <div>
-    <label className="block text-sm mb-1">Phone</label>
-    <input
-      type="text"
-      name="clientPhone"
-      value={formData.clientPhone}
-      onChange={handleChange}
-      placeholder="Enter client phone"
-      className="w-full px-3 py-1.5 border rounded focus:ring-1 focus:ring-blue-500"
-    />
-  </div>
-  <div>
-    <label className="block text-sm mb-1">Email</label>
-    <input
-      type="email"
-      name="clientEmail"
-      value={formData.clientEmail}
-      onChange={handleChange}
-      placeholder="Enter client email"
-      className="w-full px-3 py-1.5 border rounded focus:ring-1 focus:ring-blue-500"
-    />
-  </div>
-</div>
+          {formData.referredBy === "Other" && (
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Custom Referral Name
+              </label>
+              <input
+                type="text"
+                name="customReferral"
+                value={formData.customReferral}
+                onChange={(e) => {
+                  setFormData((prev) => ({
+                    ...prev,
+                    customReferral: e.target.value,
+                  }));
+                }}
+                className="w-full p-2 border rounded"
+                placeholder="Enter referral name"
+                required={formData.referredBy === "Other"}
+              />
+            </div>
+          )}
+        </div>
 
-              <div>
-                <label className="block text-sm mb-1">Street Address</label>
-                <input
-                  type="text"
-                  name="street"
-                  value={formData.street}
-                  onChange={handleChange}
-                  placeholder="Enter street address"
-                  className="w-full px-3 py-1.5 border rounded focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
+        {/* Client Details Section */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Client Name
+            </label>
+            <input
+              type="text"
+              name="clientName"
+              value={formData.clientName}
+              onChange={handleInputChange}
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Client Email
+              </label>
+              <input
+                type="email"
+                name="clientEmail"
+                value={formData.clientEmail}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">
+                Client Phone
+              </label>
+              <input
+                type="tel"
+                name="clientPhone"
+                value={formData.clientPhone}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded"
+              />
+            </div>
+          </div>
+        </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm mb-1">City</label>
-                  <input
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    placeholder="Enter city"
-                    className="w-full px-3 py-1.5 border rounded focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm mb-1">Country</label>
-                  <input
-                    type="text"
-                    name="country"
-                    value={formData.country}
-                    onChange={handleChange}
-                    placeholder="Enter country"
-                    className="w-full px-3 py-1.5 border rounded focus:ring-1 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
-
-              {/* Added Discount Field */}
-              <div>
-                <label className="block text-sm mb-1">Discount (%)</label>
-                <input
-                  type="number"
-                  name="discount"
-                  value={formData.discount}
-                  onChange={handleChange}
-                  min="0"
-                  max="100"
-                  step="0.1"
-                  placeholder="Enter discount percentage"
-                  className="w-full px-3 py-1.5 border rounded focus:ring-1 focus:ring-blue-500"
-                />
-              </div>
+        {/* Address Section */}
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Street Address
+            </label>
+            <input
+              type="text"
+              name="street"
+              value={formData.street}
+              onChange={handleInputChange}
+              className="w-full p-2 border rounded"
+              required
+            />
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-1">City</label>
+              <input
+                type="text"
+                name="city"
+                value={formData.city}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium mb-1">Country</label>
+              <input
+                type="text"
+                name="country"
+                value={formData.country}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded"
+                required
+              />
             </div>
           </div>
         </div>
 
         {/* Items Section */}
-        <div>
-          <h3 className="text-sm font-medium mb-3">Invoice Items</h3>
-          <div>
-            {/* Items Header */}
-            <div className="grid grid-cols-12 gap-2">
-              <div className="col-span-6 text-sm text-gray-600">
-                Description
+        <div className="space-y-4">
+          <h3 className="text-lg font-semibold">Items</h3>
+
+          {/* New Item Input */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="md:col-span-2">
+              <input
+                type="text"
+                name="description"
+                placeholder="Description"
+                value={newItem.description}
+                onChange={handleNewItemChange}
+                className="w-full p-2 border rounded"
+              />
+            </div>
+            <div>
+              <input
+                type="number"
+                name="quantity"
+                placeholder="Quantity"
+                value={newItem.quantity}
+                onChange={handleNewItemChange}
+                className="w-full p-2 border rounded"
+                min="1"
+              />
+            </div>
+            <div>
+              <div className="relative">
+                <span className="absolute left-3 top-2">
+                  {currencies[formData.currencyCode].symbol}
+                </span>
+                <input
+                  type="number"
+                  name="rate"
+                  placeholder="Rate"
+                  value={newItem.rate}
+                  onChange={handleNewItemChange}
+                  className="w-full p-2 pl-6 border rounded"
+                  min="0"
+                  step="0.01"
+                />
               </div>
-              <div className="col-span-2 text-sm text-gray-600">Quantity</div>
-              <div className="col-span-2 text-sm text-gray-600">Price</div>
-              <div className="col-span-2 text-sm text-gray-600">Amount</div>
             </div>
+          </div>
 
-            {/* Items List */}
-            <div className="space-y-2 mt-1">
-              {formData.items.map((item, index) => (
-                <div
-                  key={index}
-                  className="grid grid-cols-12 gap-2 items-center relative"
-                >
-                  <input
-                    placeholder="Item description"
-                    value={item.description}
-                    onChange={(e) =>
-                      handleItemChange(index, "description", e.target.value)
-                    }
-                    className="col-span-6 px-3 py-1.5 border rounded focus:ring-1 focus:ring-blue-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Qty"
-                    value={item.quantity}
-                    onChange={(e) =>
-                      handleItemChange(
-                        index,
-                        "quantity",
-                        parseInt(e.target.value)
-                      )
-                    }
-                    className="col-span-2 px-3 py-1.5 border rounded focus:ring-1 focus:ring-blue-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Price"
-                    value={item.rate}
-                    onChange={(e) =>
-                      handleItemChange(
-                        index,
-                        "rate",
-                        parseFloat(e.target.value)
-                      )
-                    }
-                    className="col-span-2 px-3 py-1.5 border rounded focus:ring-1 focus:ring-blue-500"
-                  />
-                  <input
-                    type="number"
-                    placeholder="Amount"
-                    value={item.amount}
-                    disabled
-                    className="col-span-2 px-3 py-1.5 border rounded bg-gray-50"
-                  />
-                  {formData.items.length > 1 && (
-                    <button
-                      type="button"
-                      onClick={() => deleteItem(index)}
-                      className="absolute -right-6 text-red-500 hover:text-red-700"
-                    >
-                      ✕
-                    </button>
-                  )}
-                </div>
-              ))}
+          <button
+            type="button"
+            onClick={addItem}
+            className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+          >
+            Add Item
+          </button>
+
+          {/* Items Table */}
+          {formData.items.length > 0 && (
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-full">
+                <thead>
+                  <tr className="bg-gray-50">
+                    <th className="px-4 py-2 text-left">Description</th>
+                    <th className="px-4 py-2 text-right">Quantity</th>
+                    <th className="px-4 py-2 text-right">Rate</th>
+                    <th className="px-4 py-2 text-right">Amount</th>
+                    <th className="px-4 py-2 text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {formData.items.map((item, index) => (
+                    <tr key={index} className="border-b">
+                      <td className="px-4 py-2">{item.description}</td>
+                      <td className="px-4 py-2 text-right">{item.quantity}</td>
+                      <td className="px-4 py-2 text-right">
+                        {currencies[formData.currencyCode].symbol}
+                        {parseFloat(item.rate).toFixed(2)}
+                      </td>
+                      <td className="px-4 py-2 text-right">
+                        {currencies[formData.currencyCode].symbol}
+                        {(item.quantity * item.rate).toFixed(2)}
+                      </td>
+                      <td className="px-4 py-2 text-center">
+                        <button
+                          type="button"
+                          onClick={() => removeItem(index)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          Remove
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
+          )}
+        </div>
 
-            <button
-              type="button"
-              onClick={addItem}
-              className="mt-2 text-sm text-blue-600 hover:text-blue-700"
-            >
-              + Add New Item
-            </button>
+        {/* Totals Section */}
+        <div className="space-y-2 mt-4">
+          <div className="flex justify-end items-center space-x-2">
+            <span className="font-medium">Subtotal:</span>
+            <span>
+              {totals.symbol}
+              {totals.subtotal}
+            </span>
+          </div>
+
+          <div className="flex items-center justify-end space-x-4">
+            <label className="text-sm font-medium">Discount (%):</label>
+            <input
+              type="number"
+              name="discount"
+              value={formData.discount}
+              onChange={handleInputChange}
+              className="w-24 p-2 border rounded"
+              min="0"
+              max="100"
+              step="0.1"
+            />
+            <span>
+              {totals.symbol}
+              {totals.discount}
+            </span>
+          </div>
+
+          <div className="flex justify-end items-center space-x-2 text-lg font-bold">
+            <span>Total:</span>
+            <span>
+              {totals.symbol}
+              {totals.total}
+            </span>
           </div>
         </div>
 
- 
-
-        {/* Footer Actions */}
-        <div className="flex justify-end space-x-2 pt-4 mt-4 border-t">
+        {/* Submit Button */}
+        <div className="flex justify-end space-x-4 mt-6">
           <button
             type="button"
-            onClick={onClose}
-            className="px-4 py-1.5 border text-sm font-medium rounded hover:bg-gray-50"
+            onClick={() => {
+              onClose();
+              resetForm();
+            }}
+            className="px-4 py-2 border rounded hover:bg-gray-100"
+            disabled={isLoading}
           >
             Cancel
           </button>
           <button
             type="submit"
-            className="px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700"
+            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+            disabled={isLoading}
           >
-            Create Invoice
+            {isLoading ? "Creating..." : "Create Invoice"}
           </button>
         </div>
       </form>

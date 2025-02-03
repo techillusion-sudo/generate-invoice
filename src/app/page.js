@@ -4,13 +4,14 @@
 import { useState, useEffect } from 'react';
 import InvoiceModal from '../components/InvoiceModal';
 import InvoiceTable from '../components/InvoiceTable';
+import currencies from '../data/currencies.json';
 
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [invoices, setInvoices] = useState([]);
   const [nextInvoiceNumber, setNextInvoiceNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-
+  
   useEffect(() => {
     fetchInvoices();
   }, []);
@@ -19,8 +20,6 @@ export default function Home() {
     try {
       const response = await fetch('/api/invoices');
       const data = await response.json();
-
-
       setInvoices(data);
     } catch (error) {
       console.error('Error fetching invoices:', error);
@@ -47,12 +46,19 @@ export default function Home() {
   const handleSubmit = async (formData) => {
     setIsLoading(true);
     try {
+      const selectedCurrency = currencies[formData.currencyCode];
+      const enrichedFormData = {
+        ...formData,
+        currencySymbol: selectedCurrency.symbol,
+        currencyName: selectedCurrency.name
+      };
+
       const response = await fetch('/api/invoices', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(enrichedFormData),
       });
       
       if (!response.ok) {
@@ -70,6 +76,25 @@ export default function Home() {
     }
   };
 
+  const handleDeleteInvoice = async (invoiceId) => {
+    try {
+      const response = await fetch(`/api/invoices?id=${invoiceId}`, {
+        method: 'DELETE',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to delete invoice');
+      }
+
+      // Refresh the invoices list after successful deletion
+      await fetchInvoices();
+    } catch (error) {
+      console.error('Error deleting invoice:', error);
+      alert('Failed to delete invoice: ' + error.message);
+    }
+  };
+
   return (
     <div className="container mx-auto p-4">
       <div className="flex justify-between items-center mb-6">
@@ -84,7 +109,8 @@ export default function Home() {
       </div>
 
       <InvoiceTable 
-        invoices={invoices} 
+        invoices={invoices}
+        onDeleteInvoice={handleDeleteInvoice}
       />
       
       <InvoiceModal
@@ -93,6 +119,7 @@ export default function Home() {
         onSubmit={handleSubmit}
         defaultInvoiceNumber={nextInvoiceNumber}
         isLoading={isLoading}
+        currencies={currencies}
       />
     </div>
   );

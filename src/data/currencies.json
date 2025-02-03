@@ -1,0 +1,32 @@
+{
+    "USD": {
+      "symbol": "$",
+      "name": "US Dollar",
+      "country": "United States"
+    },
+    "EUR": {
+      "symbol": "€",
+      "name": "Euro",
+      "country": "European Union"
+    },
+    "GBP": {
+      "symbol": "£",
+      "name": "British Pound Sterling",
+      "country": "United Kingdom"
+    },
+    "PKR": {
+      "symbol": "₨",
+      "name": "Pakistani Rupee",
+      "country": "Pakistan"
+    },
+    "INR": {
+      "symbol": "₹",
+      "name": "Indian Rupee",
+      "country": "India"
+    },
+    "AED": {
+      "symbol": "د.إ",
+      "name": "United Arab Emirates Dirham",
+      "country": "United Arab Emirates"
+    }
+  }

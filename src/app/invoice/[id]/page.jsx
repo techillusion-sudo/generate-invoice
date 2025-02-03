@@ -6,6 +6,7 @@ import dynamic from 'next/dynamic';
 const html2pdf = dynamic(() => import('html2pdf.js'), {
   ssr: false
 });
+
 const Invoice = ({ params }) => {
   const [invoice, setInvoice] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,7 +33,6 @@ const Invoice = ({ params }) => {
     }
   }, [params.id]);
 
-  // Transform invoice items to table data format
   // Transform invoice items to table data format
   const tableData =
     invoice?.items?.map((item) => ({
@@ -77,63 +77,69 @@ const Invoice = ({ params }) => {
   };
 
   const subtotal = calculateSubtotal();
-  // Get discount from invoice data or default to 0
   const discount = invoice?.discount || 0;
   const discountAmount = subtotal * (discount / 100);
   const total = subtotal - discountAmount;
 
+  // Get currency information
+  const currencySymbol = invoice?.currencySymbol || '$';
+  const currencyCode = invoice?.currencyCode || 'USD';
+
+  // Format currency
+  const formatCurrency = (amount) => {
+    return `${currencySymbol}${amount.toFixed(2)}`;
+  };
+
   // Print styles
-  // Add this effect in your component
   React.useEffect(() => {
     const style = document.createElement("style");
     style.textContent = `
-    @page {
-      size: A4;
-      margin: 0;
-    }
-    @media print {
-      body {
+      @page {
+        size: A4;
         margin: 0;
-        padding: 0;
-        -webkit-print-color-adjust: exact !important;
-        print-color-adjust: exact !important;
-        forced-color-adjust: exact !important;
-        color-scheme: light !important;
       }
-      .print-wrapper {
-        padding: 0 !important;
-        background: none !important;
+      @media print {
+        body {
+          margin: 0;
+          padding: 0;
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          forced-color-adjust: exact !important;
+          color-scheme: light !important;
+        }
+        .print-wrapper {
+          padding: 0 !important;
+          background: none !important;
+        }
+        #invoice {
+          margin: 0 !important;
+          padding: 0 !important;
+          width: 210mm !important;
+          min-height: 297mm !important;
+        }
+        .print\\:hidden {
+          display: none !important;
+        }
       }
-      #invoice {
-        margin: 0 !important;
-        padding: 0 !important;
-        width: 210mm !important;
-        min-height: 297mm !important;
-      }
-      .print\:hidden {
-        display: none !important;
-      }
-    }
 
-    /* Additional styles for better PDF generation */
-    #invoice {
-      background-color: white !important;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    }
-    
-    #invoice img {
-      max-width: 100%;
-      height: auto;
-    }
-    
-    @media screen {
-      .print-wrapper {
-        min-height: 297mm;
-        background-color: rgb(229, 231, 235);
-        padding: 2.5rem;
+      #invoice {
+        background-color: white !important;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
       }
-    }
-  `;
+      
+      #invoice img {
+        max-width: 100%;
+        height: auto;
+      }
+      
+      @media screen {
+        .print-wrapper {
+          min-height: 297mm;
+          background-color: rgb(229, 231, 235);
+          padding: 2.5rem;
+        }
+      }
+    `;
     document.head.appendChild(style);
 
     return () => {
@@ -148,13 +154,11 @@ const Invoice = ({ params }) => {
       </div>
     );
   }
+
   const handleDownloadPDF = async () => {
     try {
       setIsGeneratingPdf(true);
-
-      // Dynamically import html2pdf only when needed
       const html2pdf = (await import('html2pdf.js')).default;
-
       const element = document.getElementById('invoice');
       const options = {
         margin: 0,
@@ -174,7 +178,6 @@ const Invoice = ({ params }) => {
 
       const worker = html2pdf().set(options);
       await worker.from(element).save();
-
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert('Error generating PDF. Please try again.');
@@ -187,7 +190,6 @@ const Invoice = ({ params }) => {
     window.print();
   };
 
-
   return (
     <div className="relative">
       {/* Action Buttons */}
@@ -195,8 +197,7 @@ const Invoice = ({ params }) => {
         <button
           onClick={handleDownloadPDF}
           disabled={isGeneratingPdf}
-          className={`px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors ${isGeneratingPdf ? 'opacity-50 cursor-not-allowed' : ''
-            }`}
+          className={`px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors ${isGeneratingPdf ? 'opacity-50 cursor-not-allowed' : ''}`}
         >
           {isGeneratingPdf ? 'Generating PDF...' : 'Download PDF'}
         </button>
@@ -213,8 +214,6 @@ const Invoice = ({ params }) => {
           id="invoice"
           className="min-h-screen bg-white text-black light print:min-h-[297mm] print:w-[210mm] w-[210mm] print:m-0 print:p-0 relative flex flex-col"
         >
-
-
           {/* Header */}
           <div className="w-full bg-white -mt-1 relative">
             <img
@@ -233,6 +232,7 @@ const Invoice = ({ params }) => {
                 <div className="text-sm text-gray-600">
                   <p className="font-medium">Invoice #: {invoiceData.number}</p>
                   <p>Invoice Date: {invoiceData.date}</p>
+                  <p className="font-medium">Currency: {currencyCode}</p>
                 </div>
               </div>
             </div>
@@ -241,47 +241,35 @@ const Invoice = ({ params }) => {
             <div className="grid grid-cols-2 gap-8 mb-8">
               {/* From section - static */}
               <div className="p-4 bg-[#e6e6e5] rounded-lg">
-                <h3 className="font-semibold mb-2 text-gray-700 text-lg">
-                  From:
-                </h3>
+                <h3 className="font-semibold mb-2 text-gray-700 text-lg">From:</h3>
                 <p className="text-gray-600 text-sm">Techillusion</p>
-                <p className="text-gray-600 text-sm">
-                  Shama Colony Begum Kot Shahdrah Lahore
-                </p>
+                <p className="text-gray-600 text-sm">Shama Colony Begum Kot Shahdrah Lahore</p>
                 <div>
                   <p className="text-gray-600 text-sm">
-                    <span className="font-semibold">Phone:</span> +92 333 4303325
-                    / +92 300 4503593
+                    <span className="font-semibold">Phone:</span> +92 333 4303325 / +92 300 4503593
                   </p>
                 </div>
                 <p className="text-gray-600 text-sm">
-                  <span className="font-semibold">Email:</span>{" "}
-                  official.techillusion@gmail.com
+                  <span className="font-semibold">Email:</span> official.techillusion@gmail.com
                 </p>
               </div>
 
               {/* Bill To section - dynamic */}
               <div className="p-4 bg-[#e6e6e5] rounded-lg">
-                <h3 className="font-semibold mb-2 text-gray-700 text-lg">
-                  To:
-                </h3>
+                <h3 className="font-semibold mb-2 text-gray-700 text-lg">To:</h3>
                 <p className="text-gray-600 text-sm">
                   <span className="font-semibold"></span>
                   {invoice?.clientName || ""}
                 </p>
                 <p className="text-gray-600 text-sm">
                   <span className="font-semibold"></span>
-                  {invoice?.street
-                    ? `${invoice.street}, ${invoice.city}, ${invoice.country}`
-                    : ""}
+                  {invoice?.street ? `${invoice.street}, ${invoice.city}, ${invoice.country}` : ""}
                 </p>
                 <p className="text-gray-600 text-sm">
-                  {" "}
                   <span className="font-semibold">Phone: </span>
                   {invoice?.clientPhone || ""}
                 </p>
                 <p className="text-gray-600 text-sm">
-                  {" "}
                   <span className="font-semibold">Email: </span>
                   {invoice?.clientEmail || ""}
                 </p>
@@ -293,40 +281,28 @@ const Invoice = ({ params }) => {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-[#e6e6e5] border-none">
-                    <th className="border border-gray-400 p-2 text-left w-12">
-                      Sr
-                    </th>
-                    <th className="border border-gray-400 p-2 text-left">
-                      Description
-                    </th>
-                    <th className="border border-gray-400 p-2 text-right w-24">
-                      Unit Price
-                    </th>
-                    <th className="border border-gray-400 p-2 text-center w-20">
-                      QTY
-                    </th>
-                    <th className="border border-gray-400 p-2 text-right w-28">
-                      Amount
-                    </th>
+                    <th className="border border-gray-400 p-2 text-left w-12">Sr</th>
+                    <th className="border border-gray-400 p-2 text-left">Description</th>
+                    <th className="border border-gray-400 p-2 text-right w-24">Unit Price</th>
+                    <th className="border border-gray-400 p-2 text-center w-20">QTY</th>
+                    <th className="border border-gray-400 p-2 text-right w-28">Amount</th>
                   </tr>
                 </thead>
                 <tbody>
                   {[...Array(4)].map((_, rowIndex) => (
                     <tr key={rowIndex}>
-                      <td className="border border-gray-300 p-2">
-                        {rowIndex + 1})
-                      </td>
+                      <td className="border border-gray-300 p-2">{rowIndex + 1})</td>
                       <td className="border border-gray-300 p-2">
                         {tableData[rowIndex]?.description || ""}
                       </td>
                       <td className="border border-gray-300 p-2 text-right">
-                        {tableData[rowIndex]?.unitPrice?.toFixed(2) || ""}
+                        {tableData[rowIndex]?.unitPrice ? formatCurrency(tableData[rowIndex].unitPrice) : ""}
                       </td>
                       <td className="border border-gray-300 p-2 text-center">
                         {tableData[rowIndex]?.quantity || ""}
                       </td>
                       <td className="border border-gray-300 p-2 text-right">
-                        {tableData[rowIndex]?.total?.toFixed(2) || ""}
+                        {tableData[rowIndex]?.total ? formatCurrency(tableData[rowIndex].total) : ""}
                       </td>
                     </tr>
                   ))}
@@ -340,18 +316,12 @@ const Invoice = ({ params }) => {
               <div className="p-4 relative">
                 <h3 className="font-semibold mb-2 text-gray-700">Thank You!</h3>
                 <p className="text-sm text-gray-600">
-                  Thank you for your trust in Techillusion. We value your business
-                  and are committed to delivering exceptional service. Should you
-                  require further assistance or wish to explore our offerings,
-                  please do not hesitate to contact us.
+                  Thank you for your trust in Techillusion. We value your business and are committed to delivering exceptional service. Should you require further assistance or wish to explore our offerings, please do not hesitate to contact us.
                 </p>
                 <br />
                 <p className="text-sm text-gray-600">
                   Visit our website at{" "}
-                  <a
-                    href="http://www.techillusion.com"
-                    className="text-blue-600 underline"
-                  >
+                  <a href="http://www.techillusion.com" className="text-blue-600 underline">
                     www.techillusion.com
                   </a>{" "}
                   for more information about our services and updates.
@@ -363,10 +333,10 @@ const Invoice = ({ params }) => {
               </div>
 
               <img 
-                  src="/assets/stamp.png" 
-                  alt="Official Stamp" 
-                  className="absolute bottom-60 right-32 -rotate-12 w-32 h-auto object-contain opacity-90"
-                />  
+                src="/assets/stamp.png" 
+                alt="Official Stamp" 
+                className="absolute bottom-60 right-32 -rotate-12 w-32 h-auto object-contain opacity-90"
+              />  
 
               {/* Totals - dynamic */}
               <div>
@@ -374,25 +344,17 @@ const Invoice = ({ params }) => {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="font-medium text-gray-700">Subtotal:</span>
-                      <span className="text-gray-600">
-                        ${subtotal.toFixed(2)}
-                      </span>
+                      <span className="text-gray-600">{formatCurrency(subtotal)}</span>
                     </div>
-                    {discount >= 0 && ( // Only show discount if it's greater than 0
+                    {discount > 0 && (
                       <div className="flex justify-between">
-                        <span className="font-medium text-gray-700">
-                          Discount ({discount}%):
-                        </span>
-                        <span className="text-gray-600">
-                          ${discountAmount.toFixed(2)}
-                        </span>
+                        <span className="font-medium text-gray-700">Discount ({discount}%):</span>
+                        <span className="text-gray-600">{formatCurrency(discountAmount)}</span>
                       </div>
                     )}
                     <div className="flex justify-between pt-2 border-t-2 border-gray-300">
                       <span className="font-bold text-gray-800">Total Due:</span>
-                      <span className="font-bold text-gray-800">
-                        ${total.toFixed(2)}
-                      </span>
+                      <span className="font-bold text-gray-800">{formatCurrency(total)}</span>
                     </div>
                   </div>
                 </div>

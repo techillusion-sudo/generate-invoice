@@ -1,4 +1,4 @@
-// src/models/invoice.js
+//src/models/Invoice.js
 const { DataTypes } = require('sequelize');
 const sequelize = require('../config/database');
 
@@ -21,11 +21,11 @@ const Invoice = sequelize.define('Invoice', {
     type: DataTypes.STRING,
     allowNull: false
   },
-  clientPhone: {  // New field replacing clientContact
+  clientPhone: {
     type: DataTypes.STRING,
     allowNull: true
   },
-  clientEmail: {  // New field replacing clientContact
+  clientEmail: {
     type: DataTypes.STRING,
     allowNull: true
   },
@@ -45,6 +45,29 @@ const Invoice = sequelize.define('Invoice', {
     type: DataTypes.FLOAT,
     allowNull: false,
     defaultValue: 0
+  },
+  currencyCode: {
+    type: DataTypes.STRING(3),
+    allowNull: false,
+    defaultValue: 'USD',
+    validate: {
+      isIn: [['USD', 'EUR', 'GBP', 'PKR', 'INR', 'AED']]
+    }
+  },
+  currencySymbol: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: '$'
+  },
+  currencyName: {
+    type: DataTypes.STRING,
+    allowNull: false,
+    defaultValue: 'US Dollar'
+  },
+  // New referredBy field
+  referredBy: {
+    type: DataTypes.STRING,
+    allowNull: true
   }
 }, {
   timestamps: true

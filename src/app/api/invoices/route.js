@@ -1,8 +1,8 @@
 // src/app/api/invoices/route.js
 import { NextResponse } from 'next/server';
+import { Op } from 'sequelize';  // Add this import
 import sequelize from '@/config/database';
 import { Invoice, InvoiceItem, Counter } from '@/models';
-
 
 export async function GET(request) {
   try {
@@ -33,15 +33,27 @@ export async function GET(request) {
     if (isCurrent) {
       const currentYear = new Date().getFullYear();
       const yearSuffix = currentYear.toString().slice(-2);
-      const counterId = `INVOICE_${currentYear}`;
 
-      let counter = await Counter.findOne({
-        where: { id: counterId }
+      // Get the latest invoice number for the current year
+      const latestInvoice = await Invoice.findOne({
+        where: {
+          invoiceNumber: {
+            [Op.like]: `INV-1000-${yearSuffix}-%`
+          }
+        },
+        order: [['invoiceNumber', 'DESC']]
       });
 
-      const sequence = counter ? counter.sequence : 0;
-      const currentInvoiceNumber = `INV-1000-${yearSuffix}-${(sequence + 1).toString().padStart(4, '0')}`;
+      let nextSequence;
+      if (latestInvoice) {
+        // Extract the sequence number from the latest invoice
+        const match = latestInvoice.invoiceNumber.match(/(\d+)$/);
+        nextSequence = match ? parseInt(match[1]) + 1 : 1;
+      } else {
+        nextSequence = 1;
+      }
 
+      const currentInvoiceNumber = `INV-1000-${yearSuffix}-${nextSequence.toString().padStart(4, '0')}`;
       return NextResponse.json({ currentInvoiceNumber });
     }
 
@@ -63,43 +75,52 @@ export async function GET(request) {
     );
   }
 }
+
 // src/app/api/invoices/route.js
 export async function POST(request) {
   try {
     const data = await request.json();
 
     const result = await sequelize.transaction(async (t) => {
-      // Generate the next invoice number
       const currentYear = new Date().getFullYear();
       const yearSuffix = currentYear.toString().slice(-2);
-      const counterId = `INVOICE_${currentYear}`;
 
-      const [counter] = await Counter.findOrCreate({
-        where: { id: counterId },
-        defaults: {
-          year: currentYear,
-          sequence: 0
+      // Find the latest invoice number for the current year
+      const latestInvoice = await Invoice.findOne({
+        where: {
+          invoiceNumber: {
+            [Op.like]: `INV-1000-${yearSuffix}-%`
+          }
         },
-        transaction: t,
-        lock: true
+        order: [['invoiceNumber', 'DESC']],
+        transaction: t
       });
 
-      const newSequence = counter.sequence + 1;
-      await counter.update({ sequence: newSequence }, { transaction: t });
+      let nextSequence;
+      if (latestInvoice) {
+        const match = latestInvoice.invoiceNumber.match(/(\d+)$/);
+        nextSequence = match ? parseInt(match[1]) + 1 : 1;
+      } else {
+        nextSequence = 1;
+      }
 
-      const invoiceNumber = `INV-1000-${yearSuffix}-${newSequence.toString().padStart(4, '0')}`;
+      const invoiceNumber = `INV-1000-${yearSuffix}-${nextSequence.toString().padStart(4, '0')}`;
 
-      // Create the invoice with updated fields
+      // Create the invoice with all fields including referredBy
       const invoice = await Invoice.create({
         invoiceNumber,
         date: new Date(data.date),
         clientName: data.clientName,
-        clientPhone: data.clientPhone,    // Updated field
-        clientEmail: data.clientEmail,    // Updated field
+        clientPhone: data.clientPhone,
+        clientEmail: data.clientEmail,
         street: data.street,
         city: data.city,
         country: data.country,
-        discount: parseFloat(data.discount) || 0
+        discount: parseFloat(data.discount) || 0,
+        currencyCode: data.currencyCode || 'USD',
+        currencySymbol: data.currencySymbol || '$',
+        currencyName: data.currencyName || 'US Dollar',
+        referredBy: data.referredBy || null  // Add this line
       }, { transaction: t });
 
       // Create invoice items
@@ -135,7 +156,6 @@ export async function POST(request) {
   }
 }
 
-// Optional: DELETE endpoint to delete an invoice
 export async function DELETE(request) {
   try {
     const { searchParams } = new URL(request.url);
