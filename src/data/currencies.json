@@ -9,24 +9,94 @@
       "name": "Euro",
       "country": "European Union"
     },
+    "JPY": {
+      "symbol": "¥",
+      "name": "Japanese Yen",
+      "country": "Japan"
+    },
     "GBP": {
       "symbol": "£",
       "name": "British Pound Sterling",
       "country": "United Kingdom"
     },
-    "PKR": {
-      "symbol": "₨",
-      "name": "Pakistani Rupee",
-      "country": "Pakistan"
+    "AUD": {
+      "symbol": "A$",
+      "name": "Australian Dollar",
+      "country": "Australia"
+    },
+    "CAD": {
+      "symbol": "C$",
+      "name": "Canadian Dollar",
+      "country": "Canada"
+    },
+    "CHF": {
+      "symbol": "CHF",
+      "name": "Swiss Franc",
+      "country": "Switzerland"
+    },
+    "CNY": {
+      "symbol": "¥",
+      "name": "Chinese Yuan",
+      "country": "China"
+    },
+    "HKD": {
+      "symbol": "HK$",
+      "name": "Hong Kong Dollar",
+      "country": "Hong Kong"
+    },
+    "NZD": {
+      "symbol": "NZ$",
+      "name": "New Zealand Dollar",
+      "country": "New Zealand"
+    },
+    "SEK": {
+      "symbol": "kr",
+      "name": "Swedish Krona",
+      "country": "Sweden"
+    },
+    "KRW": {
+      "symbol": "₩",
+      "name": "South Korean Won",
+      "country": "South Korea"
+    },
+    "SGD": {
+      "symbol": "S$",
+      "name": "Singapore Dollar",
+      "country": "Singapore"
+    },
+    "NOK": {
+      "symbol": "kr",
+      "name": "Norwegian Krone",
+      "country": "Norway"
+    },
+    "MXN": {
+      "symbol": "$",
+      "name": "Mexican Peso",
+      "country": "Mexico"
     },
     "INR": {
       "symbol": "₹",
       "name": "Indian Rupee",
       "country": "India"
     },
+    "PKR": {
+      "symbol": "₨",
+      "name": "Pakistani Rupee",
+      "country": "Pakistan"
+    },
     "AED": {
       "symbol": "د.إ",
-      "name": "United Arab Emirates Dirham",
+      "name": "UAE Dirham",
       "country": "United Arab Emirates"
+    },
+    "SAR": {
+      "symbol": "﷼",
+      "name": "Saudi Riyal",
+      "country": "Saudi Arabia"
+    },
+    "QAR": {
+      "symbol": "﷼",
+      "name": "Qatari Riyal",
+      "country": "Qatar"
     }
   }

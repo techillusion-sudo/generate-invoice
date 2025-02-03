@@ -51,7 +51,8 @@ const Invoice = sequelize.define('Invoice', {
     allowNull: false,
     defaultValue: 'USD',
     validate: {
-      isIn: [['USD', 'EUR', 'GBP', 'PKR', 'INR', 'AED']]
+      isIn: [['USD', 'EUR', 'JPY', 'GBP', 'AUD', 'CAD', 'CHF', 'CNY', 'HKD', 'NZD', 
+              'SEK', 'KRW', 'SGD', 'NOK', 'MXN', 'INR', 'PKR', 'AED', 'SAR', 'QAR']]
     }
   },
   currencySymbol: {
