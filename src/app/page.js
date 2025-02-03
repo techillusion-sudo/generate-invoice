@@ -87,11 +87,32 @@ export default function Home() {
         throw new Error(errorData.error || 'Failed to delete invoice');
       }
 
-      // Refresh the invoices list after successful deletion
       await fetchInvoices();
     } catch (error) {
       console.error('Error deleting invoice:', error);
       alert('Failed to delete invoice: ' + error.message);
+    }
+  };
+
+  const handleUpdatePaymentStatus = async (invoiceId, paymentStatus) => {
+    try {
+      const response = await fetch('/api/invoices/payment-status', {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ id: invoiceId, paymentStatus }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to update payment status');
+      }
+
+      await fetchInvoices();
+    } catch (error) {
+      console.error('Error updating payment status:', error);
+      alert('Failed to update payment status: ' + error.message);
     }
   };
 
@@ -111,6 +132,7 @@ export default function Home() {
       <InvoiceTable 
         invoices={invoices}
         onDeleteInvoice={handleDeleteInvoice}
+        onUpdatePaymentStatus={handleUpdatePaymentStatus}
       />
       
       <InvoiceModal

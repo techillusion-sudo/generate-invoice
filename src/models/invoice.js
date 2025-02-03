@@ -46,6 +46,11 @@ const Invoice = sequelize.define('Invoice', {
     allowNull: false,
     defaultValue: 0
   },
+  paymentStatus: {
+    type: DataTypes.ENUM('PENDING', 'COMPLETED', 'PARTIAL', 'CANCELLED'),
+    allowNull: false,
+    defaultValue: 'PENDING'
+  },
   currencyCode: {
     type: DataTypes.STRING(3),
     allowNull: false,
