@@ -124,6 +124,9 @@ const InvoiceTable = ({ invoices, onDeleteInvoice, onUpdatePaymentStatus }) => {
                 Payment Status
               </th>
               <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+      Referred By
+    </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                 Actions
               </th>
             </tr>
@@ -150,6 +153,9 @@ const InvoiceTable = ({ invoices, onDeleteInvoice, onUpdatePaymentStatus }) => {
                     onClick={(e) => handleStatusClick(invoice, e)}
                   />
                 </td>
+                <td className="px-6 py-4 whitespace-nowrap">
+        {invoice.referredBy || 'Ali Raza'}
+      </td>
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center space-x-3">
                     <button
