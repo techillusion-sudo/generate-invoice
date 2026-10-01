@@ -6,6 +6,5 @@
     "type": "shell",
     "command": "npm run lint",
     "runOn": "folderOpen"
-  },
-  "task.allowAutomaticTasks": true
+  }
 }
